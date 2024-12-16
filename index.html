@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Status</title>
+
+  <!-- Tailwind CSS + DaisyUI -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@1.14.0/dist/full.css" rel="stylesheet">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- Animate for visual effects -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+</head>
+
+<body
+  class="bg-gradient-to-br from-gray-100 to-blue-50 flex items-center justify-center min-h-screen transition-all duration-500">
+
+  <!-- Main Container -->
+  <div
+    class="p-6 sm:p-12 bg-white rounded-lg shadow-2xl w-full max-w-lg transform scale-100 hover:scale-105 transition-transform duration-300 animate__animated animate__fadeIn  hover:shadow-2xl">
+
+    <h1
+      class="text-4xl font-bold mb-6 text-center text-gray-800 transition-all duration-300 hover:text-blue-600 animate__animated animate__bounceIn">
+      Check Your Delivery Status
+    </h1>
+
+    <!-- Email Input -->
+    <input id="email" type="email" placeholder="Enter your email"
+      class="input input-bordered w-full mt-4 mb-4 px-4 py-2 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transform transition-all duration-200 shadow-md hover:shadow-lg animate__animated animate__fadeInUp">
+
+    <!-- Button to check status -->
+    <button onclick="getDeliveryStatus()"
+      class="btn btn-primary w-full mt-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition-all duration-300 transform scale-105 shadow-xl hover:shadow-2xl animate__animated animate__pulse">
+      🔍 Check Status
+    </button>
+
+    <!-- Product Details -->
+    <div id="productDetails" class="mt-4 text-center font-bold text-gray-800">
+    </div>
+
+    <!-- Delivery Progress -->
+    <div id="orderProgress"
+      class="mt-6 flex flex-wrap items-center justify-between space-y-2 sm:space-x-2 sm:space-y-0">
+    </div>
+
+    <!-- Status Text -->
+    <p id="status"
+      class="mt-6 text-center text-lg font-semibold text-gray-800 animate__animated animate__fadeInDown transition-all duration-500">
+    </p>
+
+  </div>
+
+</body>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyC7crQ2H-I8a6LHShsQj7jOBfnDTJbGllk",
+    authDomain: "delivery-status-55d14.firebaseapp.com",
+    projectId: "delivery-status-55d14",
+    storageBucket: "delivery-status-55d14.firebasestorage.app",
+    messagingSenderId: "822945322583",
+    appId: "1:822945322583:web:0945a72379ebc4164b7512"
+  };
+
+  try {
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database(app);
+    console.log('Firebase initialized successfully');
+  } catch (error) {
+    console.error('Firebase initialization error', error);
+  }
+
+  async function getDeliveryStatus() {
+    const email = document.getElementById('email').value.trim().toLowerCase().replace(/\./g, '_');
+
+    if (!email) {
+      alert('Please enter your email');
+      return;
+    }
+
+    try {
+      const ref = firebase.database().ref(`deliveries/${email}`);
+      const snapshot = await ref.once('value');
+      const data = snapshot.val();
+
+      const orderSteps = ['Ordered', 'Packed', 'In Transit', 'Out for Delivery', 'Delivered'];
+      const status = data ? data.status : null;
+      const productName = data && data.product ? data.product.name : 'Unknown Product';
+      const productPrice = data && data.product ? data.product.price : '0.00';
+
+      // Display product details
+      document.getElementById('productDetails').innerHTML = `
+        <p><strong>Product Name:</strong> ${productName}</p>
+        <p><strong>Price:</strong> $${productPrice}</p>
+      `;
+
+      const orderProgress = document.getElementById('orderProgress');
+      orderProgress.innerHTML = '';
+
+      if (status) {
+        const stepIndex = orderSteps.indexOf(status);
+
+        orderSteps.forEach((item, index) => {
+          const completionValue = index <= stepIndex ? 100 : 0;
+          const progressEl = `<progress class="progress progress-success w-56 mt-2" value="${completionValue}" max="100"></progress>`;
+
+          const stepBox = document.createElement('div');
+          stepBox.innerHTML = `<span class="font-semibold text-black">${item}</span>${progressEl}`;
+
+          orderProgress.appendChild(stepBox);
+        });
+      } else {
+        document.getElementById('status').innerText = 'No delivery status found';
+      }
+    } catch (err) {
+      console.error('Failed to fetch delivery status', err);
+    }
+  }
+</script>
+
+</html>

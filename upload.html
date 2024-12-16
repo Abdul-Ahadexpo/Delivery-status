@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Status Upload</title>
+
+  <!-- Tailwind CSS + DaisyUI -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@1.14.0/dist/full.css" rel="stylesheet">
+
+  <!-- Firebase CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+
+  <div class="p-8 bg-white rounded-lg shadow-lg max-w-md w-full">
+    <h1 class="text-2xl text-black font-bold mb-6 text-center">Upload Delivery Status</h1>
+
+    <!-- Email Input -->
+    <input id="emailUpload" type="email" placeholder="Enter Your Email" class="input input-bordered w-full mb-4" />
+
+    <!-- Dropdown for Delivery Status -->
+    <select id="statusInput" class="input input-bordered w-full mb-4 mt-2 rounded-lg bg-gray-100">
+      <option value="Ordered">Ordered</option>
+      <option value="Packed">Packed</option>
+      <option value="In Transit">In Transit</option>
+      <option value="Out for Delivery">Out for Delivery</option>
+      <option value="Delivered">Delivered</option>
+    </select>
+
+    <!-- Product Name Input -->
+    <input id="productName" type="text" placeholder="Enter Product Name" class="input input-bordered w-full mb-4" />
+    <input id="productPrice" type="number" placeholder="Enter Product Price" class="input input-bordered w-full mb-4" />
+
+    <!-- Upload Button -->
+    <button onclick="uploadDeliveryStatus()" class="btn btn-primary w-full mt-2">
+      Upload Status
+    </button>
+
+    <!-- Confirmation Message -->
+    <p id="confirmation" class="mt-4 font-bold text-green-600 text-center"></p>
+
+  </div>
+
+</body>
+
+<script>
+  try {
+    if (firebase) {
+      console.log("Firebase is loaded successfully!");
+    } else {
+      throw new Error('Firebase is not defined');
+    }
+  } catch (error) {
+    console.error("Firebase failed to load", error);
+  }
+</script>
+
+<script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyC7crQ2H-I8a6LHShsQj7jOBfnDTJbGllk",
+    authDomain: "delivery-status-55d14.firebaseapp.com",
+    projectId: "delivery-status-55d14",
+    storageBucket: "delivery-status-55d14.firebasestorage.app",
+    messagingSenderId: "822945322583",
+    appId: "1:822945322583:web:0945a72379ebc4164b7512"
+  };
+
+  const app = firebase.initializeApp(firebaseConfig);
+  const database = firebase.database(app);
+
+  function uploadDeliveryStatus() {
+    const email = document.getElementById('emailUpload').value.trim().toLowerCase().replace(/\./g, '_');
+    const status = document.getElementById('statusInput').value;
+    const productName = document.getElementById('productName').value.trim();
+    const productPrice = document.getElementById('productPrice').value;
+
+    if (!email || !status || !productName || !productPrice) {
+      return alert('Please fill in all fields');
+    }
+
+    const deliveryRef = firebase.database().ref(`deliveries/${email}`);
+
+    const deliveryData = {
+      status: status,
+      product: {
+        name: productName,
+        price: parseFloat(productPrice)
+      }
+    };
+
+    deliveryRef.set(deliveryData)
+      .then(() => {
+        document.getElementById('confirmation').innerText = "Delivery Status and Product Information Uploaded Successfully!";
+      })
+      .catch(console.error);
+  }
+</script>
+
+</html>
